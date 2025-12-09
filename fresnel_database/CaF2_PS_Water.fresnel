@@ -1,0 +1,46 @@
+# ============================================================
+# Fresnel configuration: Air → CaF2 prism → PS polymer → Water
+# Extracted directly from MATLAB Fresnel_Prism.m
+# ============================================================
+
+geometry = prism_polymer_water
+
+# ------------------------------------------------------------
+# Incidence Angles (degrees)
+# ------------------------------------------------------------
+A_vis   = 60     ; visible incidence angle
+A_ir    = 55     ; IR incidence angle
+
+# ------------------------------------------------------------
+# Visible light (λ_vis = 532 nm)
+# ------------------------------------------------------------
+n0_vis = 1.0000        ; air
+n1_vis = 1.4354        ; CaF2
+n2_vis = 1.5983        ; PS
+n3_vis = 1.3337        ; water
+lambda_vis_nm = 532
+
+# ------------------------------------------------------------
+# Infrared light (λ_ir ≈ 6061 nm, ~1650 cm^-1)
+# ------------------------------------------------------------
+n0_ir = 1.0000
+n1_ir = 1.3847        ; CaF2
+n2_ir = 1.5717        ; PS
+n3_ir = 1.2979        ; water
+lambda_ir_nm = 6061
+
+# ------------------------------------------------------------
+# Sum-Frequency (λ_sfg = 1/(1/λ_vis + 1/λ_ir))
+# MATLAB treats refractive indices at the SFG wavelength:
+# ------------------------------------------------------------
+n0_sfg = 1.0000        ; air
+n1_sfg = 1.4369        ; CaF2
+n2_sfg = 1.6052        ; PS
+n3_sfg = 1.3354        ; water
+# λ_sfg is computed dynamically, but include for completeness:
+lambda_sfg_nm = 489    ; approx value from MATLAB comments
+
+# ------------------------------------------------------------
+# Polymer thickness (nm)
+# ------------------------------------------------------------
+polymer_thickness_nm = 1.0

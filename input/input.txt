@@ -1,0 +1,25 @@
+; use "; or "#" for comments in the input. 
+
+PDB_file     = new.pdb                     ; name of pdb file
+center_freq  = 1650                        ; take the center frequence of the amide 1 signal  
+layer        = 1                           ; assumes the protein forms monolayer at surface
+
+; tilt and twist angle take for the calculation
+tilt_start   = 0                        ; tilt angle is angle to the surface
+tilt_end     = 180                      ; tilt angle should be in [0,180]
+tilt_points  = 19                       ; num. point in the range (include both ends), give 1 if start == end
+twist_start  = 0                        ; twist angle of the molecule
+twist_end    = 360                      ; should in range [0,360]
+twist_points = 37                       ; num. point in the range (include both ends), give 1 if start == end
+
+; take cutoff or not in calcultating coupling terms
+use_cutoff = no           ; yes or no
+cutoff_distance = 12.0    ; in Angstrom, coupling further than this distance will not be considered
+
+; spectra related parameters
+width = 10                      ; Lorentzian width (Γ) in SFG calculation
+spec_range_start = 1550         ; SFG range starts at:
+spec_range_end   = 1700         ; SFG range ends at:
+spec_range_step  = 1            ; step of SFG range to be calculated
+SpectraFolder = output_spectra  ; output theortical spec to: ./$SpectraFolder 
+SpectraStorePrefix = my_sfg     ; name it as $Prefix_($tilt,$twist).txt
