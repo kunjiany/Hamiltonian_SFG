@@ -51,7 +51,7 @@ Chi2Result compute_chi2_matlab(
     out.chi_mol.resize(N);
     out.chi_lab.resize(N);
 
-    std::cout << "\n================== CHI2 DEBUG ==================\n";
+
 
     // Loop through exciton states
     for (int k = 0; k < N; k++)
@@ -68,31 +68,9 @@ Chi2Result compute_chi2_matlab(
 
         // 4. Rotate to lab frame
         out.chi_lab[k] = apply_R3_single(R, out.chi_mol[k]);
-
-        // ------------------------------------------------------------
-        // DEBUG PRINT (side-by-side with MATLAB)
-        // ------------------------------------------------------------
-        std::cout << "\nExciton k = " << k << "\n";
-        std::cout << "freq = " << out.freq[k] << "\n";
-
-        std::cout << "mu_ex = [" << mu_ex.x << ", "
-                                 << mu_ex.y << ", "
-                                 << mu_ex.z << "]\n";
-
-        std::cout << "alpha_ex = [ ";
-        for (double v : alpha_ex) std::cout << v << " ";
-        std::cout << "]\n";
-
-        std::cout << "chi_mol = [ ";
-        for (double v : out.chi_mol[k]) std::cout << v << " ";
-        std::cout << "]\n";
-
-        std::cout << "chi_lab = [ ";
-        for (double v : out.chi_lab[k]) std::cout << v << " ";
-        std::cout << "]\n";
     }
 
-    std::cout << "================================================\n";
+
 
     return out;
 }

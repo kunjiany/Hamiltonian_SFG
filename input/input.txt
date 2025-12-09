@@ -1,6 +1,6 @@
 ; use "; or "#" for comments in the input. 
 
-PDB_file     = new.pdb                     ; name of pdb file
+PDB_file     = complex_144w_90_40_P450.pdb                     ; name of pdb file
 center_freq  = 1650                        ; take the center frequence of the amide 1 signal  
 layer        = 1                           ; assumes the protein forms monolayer at surface
 

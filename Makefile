@@ -3,7 +3,7 @@
 ############################################################
 
 CXX      = g++
-CXXFLAGS = -std=c++17 -O3 -g
+CXXFLAGS = -std=c++17 -O3 -g -fopenmp
 
 # ----------------------------------------------------------
 # Include / Library paths
@@ -31,7 +31,7 @@ TARGET = sfg_simulator
 all: $(TARGET)
 
 $(TARGET): $(OBJ)
-	$(CXX) $(OBJ) -o $@ $(LIBS)
+	$(CXX) $(OBJ) -o $@ $(LIBS) -fopenmp
 
 src/%.o: src/%.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
@@ -41,5 +41,3 @@ src/%.o: src/%.cpp
 # ----------------------------------------------------------
 clean:
 	rm -f src/*.o $(TARGET)
-
-

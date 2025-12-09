@@ -7,6 +7,10 @@
 #include <stdexcept>
 #include <string>
 #include <iostream>
+#include <mutex>
+
+
+static std::mutex h5_mutex;
 
 struct R3Matrix {
     double m[27][27];
@@ -55,6 +59,8 @@ public:
 
     R3Matrix get_R(double psi_deg, double theta_deg)
     {
+        std::lock_guard<std::mutex> lock(h5_mutex);
+        
         psi_deg   = fmod(fmod(psi_deg, 360.0) + 360.0, 360.0);
         theta_deg = fmod(fmod(theta_deg,180.0) + 180.0,180.0);
 

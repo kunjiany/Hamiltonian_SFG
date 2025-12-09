@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <vector>
 #include <filesystem>
+#include <omp.h>
 
 #include "Read_Input.hpp"
 #include "Fresnel_Read.hpp"          // only for compatibility, not used
@@ -21,7 +22,7 @@
 int main()
 {
     std::cout << "=== FULL Amide-I + SFG Pipeline (MATLAB Equivalent) ===\n";
-
+    omp_set_dynamic(0);
     // ------------------------------------------------------------
     // 1. Read input.txt (same as old main)
     // ------------------------------------------------------------
@@ -86,92 +87,101 @@ int main()
     // ------------------------------------------------------------
     // 4. Orientation loop (same structure as old main)
     // ------------------------------------------------------------
-    for (double twist_deg : twist_vec)
-    {
-        for (double tilt_deg : tilt_vec)
-        {
-            std::cout << "\n>>> tilt = " << tilt_deg
-                      << "°, twist = " << twist_deg << "°\n";
 
-            // (A) Exciton Hamiltonian (MATLAB-equivalent)
+    #pragma omp parallel for collapse(2) schedule(dynamic)
+    for (int it = 0; it < (int)twist_vec.size(); it++)
+    {
+        for (int jt = 0; jt < (int)tilt_vec.size(); jt++)
+        {
+            double twist_deg = twist_vec[it];
+            double tilt_deg  = tilt_vec[jt];
+
+            // Each thread prints independently → optional mutex if needed
+            #pragma omp critical
+            {
+                std::cout << "\n>>> tilt = " << tilt_deg
+                        << "°, twist = " << twist_deg << "°\n";
+            }
+
+            // =============================================
+            // A) Exciton Hamiltonian
+            // =============================================
             HamiltonianEquivResult H =
                 Hamiltonian_equiv_matlab(geo, props, freqs, tilt_deg, twist_deg);
 
-
-            // (B) χ² (rotated to lab frame)
+            // =============================================
+            // B) χ² using R3 lookup
+            // =============================================
             R3Matrix R = Rdb.get_R(twist_deg, tilt_deg);
-            // Print the first row of the rotation matrix for debugging
-            std::cout << "R(tilt=" << tilt_deg << ", twist=" << twist_deg << ") first row: "
-                    << R.m[0][0] << "  " << R.m[0][1] << "  " << R.m[0][2] << "\n" 
-                    << R.m[1][0] << "  " << R.m[1][1] << "  " << R.m[1][2] << "\n" 
-                    << R.m[2][0] << "  " << R.m[2][1] << "  " << R.m[2][2] << "\n" <<std::endl;
-
 
             Chi2Result chi = compute_chi2_matlab(H, R);
 
-        // =========================================================
-        // DEBUG: Print chi_mol and chi_lab for this tilt/twist
-        // =========================================================
-        {
-            std::string tag =
-                "tilt" + std::to_string((int)std::round(tilt_deg)) +
-                "_twist" + std::to_string((int)std::round(twist_deg));
+            // =============================================
+            // DEBUG OUTPUT (thread safe)
+            // =============================================
+            {
+                std::string tag =
+                    "tilt" + std::to_string((int)std::round(tilt_deg)) +
+                    "_twist" + std::to_string((int)std::round(twist_deg));
 
-            std::ofstream fmol("debug1/chi_mol_" + tag + ".txt");
-            std::ofstream flab("debug1/chi_lab_" + tag + ".txt");
+                {
+                    std::ofstream fmol("debug1/chi_mol_" + tag + ".txt");
+                    std::ofstream flab("debug1/chi_lab_" + tag + ".txt");
 
-            if (!fmol || !flab) {
-                std::cerr << "ERROR: cannot open debug1 directory or files.\n";
-            } else {
-                fmol << std::setprecision(10);
-                flab << std::setprecision(10);
+                    if (fmol && flab)
+                    {
+                        fmol << std::setprecision(10);
+                        flab << std::setprecision(10);
 
-                for (int k = 0; k < chi.N; k++) {
-                    fmol << "# exciton " << k << "\n";
-                    flab << "# exciton " << k << "\n";
+                        for (int k = 0; k < chi.N; k++) {
+                            fmol << "# exciton " << k << "\n";
+                            flab << "# exciton " << k << "\n";
 
-                    // χ_mol (27 numbers)
-                    for (int i = 0; i < 27; i++)
-                        fmol << chi.chi_mol[k][i] << (i == 26 ? '\n' : ' ');
+                            for (int i = 0; i < 27; i++)
+                                fmol << chi.chi_mol[k][i] << (i == 26 ? '\n' : ' ');
 
-                    // χ_lab (27 numbers)
-                    for (int i = 0; i < 27; i++)
-                        flab << chi.chi_lab[k][i] << (i == 26 ? '\n' : ' ');
+                            for (int i = 0; i < 27; i++)
+                                flab << chi.chi_lab[k][i] << (i == 26 ? '\n' : ' ');
+                        }
+                    }
                 }
             }
-        }
 
-            // ==========================================================
-
-            // (C) Compute raw SFG (NO Fresnel)
+            // =============================================
+            // C) SFG calculation
+            // =============================================
             SpectrumResult spec =
                 compute_SFG_spectra(H, chi, in.width, freq_grid);
 
-            // ----------------------------------------------------
-            // (D) Write MATLAB-style output: freq, SSP, PPP
-            // ----------------------------------------------------
-            std::string fname =
-                in.SpectraFolder + "/" +
-                in.SpectraStorePrefix +
-                "_tilt"  + std::to_string((int)std::round(tilt_deg)) +
-                "_twist" + std::to_string((int)std::round(twist_deg)) +
-                ".txt";
-
-            std::ofstream fout(fname);
-            fout << "# freq   SSP(yyz)   PPP(zzz)\n";
-            fout << std::setprecision(10);
-
-            for (size_t i = 0; i < spec.freq.size(); i++)
+            // =============================================
+            // D) Write output spectra (thread-safe)
+            // =============================================
             {
-                fout << spec.freq[i] << " "
-                     << spec.I_ssp[i] << " "
-                     << spec.I_ppp[i] << "\n";
-            }
+                std::string fname =
+                    in.SpectraFolder + "/" +
+                    in.SpectraStorePrefix +
+                    "_tilt"  + std::to_string((int)std::round(tilt_deg)) +
+                    "_twist" + std::to_string((int)std::round(twist_deg)) +
+                    ".txt";
 
-            std::cout << "Wrote: " << fname << "\n";
+                std::ofstream fout(fname);
+                fout << "# freq   SSP(yyz)   PPP(zzz)\n";
+                fout << std::setprecision(10);
+
+                for (size_t i = 0; i < spec.freq.size(); i++)
+                {
+                    fout << spec.freq[i] << " "
+                        << spec.I_ssp[i] << " "
+                        << spec.I_ppp[i] << "\n";
+                }
+
+                #pragma omp critical
+                {
+                    std::cout << "Wrote: " << fname << "\n";
+                }
+            }
         }
     }
-
     std::cout << "\n=== Completed full SFG pipeline ===\n";
     return 0;
 }
