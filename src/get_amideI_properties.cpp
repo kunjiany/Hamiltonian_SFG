@@ -1,20 +1,17 @@
 #include "get_amideI_properties.hpp"
 #include <cmath>
 
-// -----------------------------------------------------------
+
 // Define the intrinsic molecular dipole (mu_Mol)
 // MATLAB code uses 25°
-// -----------------------------------------------------------
 static Vec3 get_intrinsic_dipole()
 {
     double angle = 25.0 * M_PI / 180.0;
     return {0.0, std::sin(angle), -std::cos(angle)};
 }
 
-// -----------------------------------------------------------
-// Define intrinsic molecular Raman tensor (3×3)
-// MATLAB code scales it by 5, rotated by alpha_angle = 34°
-// -----------------------------------------------------------
+
+// Define intrinsic molecular Raman tensor 
 static void get_intrinsic_raman(double A[3][3])
 {
     A[0][0] = 0.05 * 5;
@@ -30,16 +27,14 @@ static void get_intrinsic_raman(double A[3][3])
     A[2][2] = 1.0 * 5;
 }
 
-// -----------------------------------------------------------
+
 // Rotate Raman tensor by alpha_angle = 34° (same as MATLAB)
-// -----------------------------------------------------------
 static void rotate_raman_to_molecule(double A[3][3])
 {
     double angle = 34.0 * M_PI / 180.0;
     double c = std::cos(angle);
     double s = std::sin(angle);
 
-    // Rotation matrix around x
     double R[3][3] = {
         {1, 0, 0},
         {0, c, -s},
@@ -49,29 +44,24 @@ static void rotate_raman_to_molecule(double A[3][3])
     double tmp[3][3];
     double Arot[3][3];
 
-    // tmp = R * A
     for(int i=0;i<3;i++){
         for(int j=0;j<3;j++){
             tmp[i][j] = R[i][0]*A[0][j] + R[i][1]*A[1][j] + R[i][2]*A[2][j];
         }
     }
 
-    // Arot = tmp * R^T
     for(int i=0;i<3;i++){
         for(int j=0;j<3;j++){
             Arot[i][j] = tmp[i][0]*R[j][0] + tmp[i][1]*R[j][1] + tmp[i][2]*R[j][2];
         }
     }
 
-    // copy back
     for(int i=0;i<3;i++)
         for(int j=0;j<3;j++)
             A[i][j] = Arot[i][j];
 }
 
-// -----------------------------------------------------------
-// Rotate dipole into simulation frame: μ_sim = [X,Y,Z]^T * μ
-// -----------------------------------------------------------
+
 static Vec3 rotate_dipole(const Vec3& mu, const LocalFrame& f)
 {
     return {
@@ -81,10 +71,8 @@ static Vec3 rotate_dipole(const Vec3& mu, const LocalFrame& f)
     };
 }
 
-// -----------------------------------------------------------
+
 // Rotate Raman tensor: α_sim = T * α * T^T
-// where T is [X_axis; Y_axis; Z_axis]
-// -----------------------------------------------------------
 static void rotate_raman_to_sim(
     const double A_mol[3][3], const LocalFrame& f,
     double A_out[3][3])
@@ -97,14 +85,12 @@ static void rotate_raman_to_sim(
 
     double tmp[3][3];
 
-    // tmp = T * A_mol
     for(int i=0;i<3;i++){
         for(int j=0;j<3;j++){
             tmp[i][j] = T[i][0]*A_mol[0][j] + T[i][1]*A_mol[1][j] + T[i][2]*A_mol[2][j];
         }
     }
 
-    // A_out = tmp * T^T
     for(int i=0;i<3;i++){
         for(int j=0;j<3;j++){
             A_out[i][j] = tmp[i][0]*T[j][0] + tmp[i][1]*T[j][1] + tmp[i][2]*T[j][2];
@@ -112,9 +98,6 @@ static void rotate_raman_to_sim(
     }
 }
 
-// -----------------------------------------------------------
-// Reduce Raman tensor (XX, YY, ZZ, XY, YZ, XZ)
-// -----------------------------------------------------------
 static void reduce_raman(double A[3][3], double out[6])
 {
     out[0] = A[0][0];  // XX
@@ -125,9 +108,7 @@ static void reduce_raman(double A[3][3], double out[6])
     out[5] = A[0][2];  // XZ
 }
 
-// -----------------------------------------------------------
-// PUBLIC API
-// -----------------------------------------------------------
+
 std::vector<AmideIProps> get_amideI_properties(
     const std::vector<LocalFrame>& frames)
 {

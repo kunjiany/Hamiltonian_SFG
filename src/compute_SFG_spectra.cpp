@@ -35,8 +35,8 @@ SpectrumResult compute_SFG_spectra(
     out.I_ssp.assign(nf, 0.0);
     out.I_ppp.assign(nf, 0.0);
 
-    // SSP → MATLAB column 23 → C++ index 22
-    // PPP → MATLAB column 27 → C++ index 26
+    // SSP  MATLAB column 23   C++ index 22
+    // PPP   MATLAB column 27   C++ index 26
     const int IDX_SSP = 22;
     const int IDX_PPP = 26;
 

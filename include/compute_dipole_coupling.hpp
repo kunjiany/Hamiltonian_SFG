@@ -10,7 +10,7 @@ double compute_dipole_coupling(
     const Vec3 &Ri_minus_Rj,
     double distance_cutoff,   // Å
     bool use_cutoff,
-    double prefactor          // MATLAB β prefactor (cm⁻¹·Å³)
+    double prefactor          // MATLAB beta prefactor (cm⁻¹·Å³)
 );
 
 #endif

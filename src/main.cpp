@@ -16,16 +16,12 @@
 #include "load_R3ZXZ1.hpp"
 #include "compute_SFG_spectra.hpp"
 
-// ================================================================
-// MAIN
-// ================================================================
+
 int main()
 {
     std::cout << "=== FULL Amide-I + SFG Pipeline (MATLAB Equivalent) ===\n";
     omp_set_dynamic(0);
-    // ------------------------------------------------------------
-    // 1. Read input.txt (same as old main)
-    // ------------------------------------------------------------
+
     InputParams in = Read_Input("./input/input.txt");
 
     std::cout << "PDB: " << in.pdbFile << "\n";
@@ -37,21 +33,14 @@ int main()
               << " to " << in.twist_end
               << " (" << in.twist_points << " points)\n";
 
-    // ------------------------------------------------------------
-    // Create output directory
-    // ------------------------------------------------------------
     std::filesystem::create_directories(in.SpectraFolder);
 
-    // ------------------------------------------------------------
-    // Frequency grid
-    // ------------------------------------------------------------
+
     std::vector<double> freq_grid;
     for (double w = in.spec_range_start; w <= in.spec_range_end; w += in.spec_range_step)
         freq_grid.push_back(w);
 
-    // ------------------------------------------------------------
-    // 2. Load site-level amide modes
-    // ------------------------------------------------------------
+
     AmideIMultiOutput M =
         Get_AmideI_Multi(in.centerFreq, 1, 5, in.layer, in.pdbFile);
 
@@ -75,18 +64,13 @@ int main()
         freqs[i].freq = M.freq[i];
     }
 
-    // ------------------------------------------------------------
-    // 3. Load R3 ZXZ rotation database
-    // ------------------------------------------------------------
+
     R3Database Rdb("./data/R3ZXZ1_database.h5");
 
     // Generate tilt/twist vectors (same as old MATLAB driver)
     auto tilt_vec  = Linspace(in.tilt_start,  in.tilt_end,  in.tilt_points);
     auto twist_vec = Linspace(in.twist_start, in.twist_end, in.twist_points);
 
-    // ------------------------------------------------------------
-    // 4. Orientation loop (same structure as old main)
-    // ------------------------------------------------------------
 
     #pragma omp parallel for collapse(2) schedule(dynamic)
     for (int it = 0; it < (int)twist_vec.size(); it++)
@@ -103,22 +87,18 @@ int main()
                         << "°, twist = " << twist_deg << "°\n";
             }
 
-            // =============================================
-            // A) Exciton Hamiltonian
-            // =============================================
+            // Exciton 
             HamiltonianEquivResult H =
                 Hamiltonian_equiv_matlab(geo, props, freqs, tilt_deg, twist_deg);
 
-            // =============================================
-            // B) χ² using R3 lookup
-            // =============================================
+            
+            // chi2 using R3 lookup
             R3Matrix R = Rdb.get_R(twist_deg, tilt_deg);
 
             Chi2Result chi = compute_chi2_matlab(H, R);
 
-            // =============================================
+            
             // DEBUG OUTPUT (thread safe)
-            // =============================================
             {
                 std::string tag =
                     "tilt" + std::to_string((int)std::round(tilt_deg)) +
@@ -147,15 +127,10 @@ int main()
                 }
             }
 
-            // =============================================
-            // C) SFG calculation
-            // =============================================
             SpectrumResult spec =
                 compute_SFG_spectra(H, chi, in.width, freq_grid);
 
-            // =============================================
-            // D) Write output spectra (thread-safe)
-            // =============================================
+
             {
                 std::string fname =
                     in.SpectraFolder + "/" +

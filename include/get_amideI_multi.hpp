@@ -12,9 +12,7 @@
 #include "get_local_frame.hpp"
 #include "get_amideI_properties.hpp"
 
-// ============================================================================
-// OUTPUT STRUCT — must match MATLAB GetAmideIMulti.m 100%
-// ============================================================================
+
 struct AmideIMultiOutput {
 
     // Geometry: center of vibration
@@ -42,9 +40,6 @@ struct AmideIMultiOutput {
 };
 
 
-// ============================================================================
-// MAIN API — Equivalent to MATLAB GetAmideIMulti(center_freq, helixa, helixb, layer, PDB_Code, ...)
-// ============================================================================
 AmideIMultiOutput Get_AmideI_Multi(
     double center_freq,
     int helix_a,

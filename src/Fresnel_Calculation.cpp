@@ -3,6 +3,8 @@
 #include <complex>
 #include <iostream>
 
+
+//Not use now
 using cd = std::complex<double>;
 
 // -----------------------------------------------------------

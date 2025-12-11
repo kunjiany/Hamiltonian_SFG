@@ -56,17 +56,17 @@ Chi2Result compute_chi2_matlab(
     // Loop through exciton states
     for (int k = 0; k < N; k++)
     {
-        // 1. Frequency
+        // frequency
         out.freq[k] = H.Sort_Ex_Freq[k];
 
-        // 2. Extract exciton μ and α
+        // exciton μ and α
         const Vec3& mu_ex = H.mu_ex[k];
         const std::array<double,9>& alpha_ex = H.alpha_ex[k];
 
-        // 3. Compute χ_mol (27×1)
+        // Compute χ_mol 
         out.chi_mol[k] = outer_alpha_mu(alpha_ex, mu_ex);
 
-        // 4. Rotate to lab frame
+        // Rotate to lab frame
         out.chi_lab[k] = apply_R3_single(R, out.chi_mol[k]);
     }
 

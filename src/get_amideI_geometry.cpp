@@ -30,7 +30,7 @@ std::vector<AmideIGeo> get_amideI_geometry(
         Vec3 CO_vector = normalize(O_coord - C_coord);
         Vec3 CN_vector = normalize(N_coord - C_coord);
 
-        // Compute vibrational center
+        // Compute vibrational center of dipole
         Vec3 vibration_center_coord =
             compute_vibration_center(C_coord, CO_vector, CN_vector);
 

@@ -8,7 +8,7 @@ std::vector<AmideIEntry> Extract_Amide_Coordinates(const std::vector<Atom>& atom
 
     int NumAtoms = atoms.size();
 
-    // ---- Step 1: collect all C atoms in PDB order ----
+    //  Step 1: collect all C atoms in PDB order 
     std::vector<int> C_indices;
     C_indices.reserve(NumAtoms);
     for (int i = 0; i < NumAtoms; i++) {
@@ -17,7 +17,7 @@ std::vector<AmideIEntry> Extract_Amide_Coordinates(const std::vector<Atom>& atom
         }
     }
 
-    // ---- Step 2: for each C, find the next O ----
+    //  Step 2: for each C, find the next O 
     std::vector<int> O_indices(C_indices.size(), -1);
     for (size_t k = 0; k < C_indices.size(); k++) {
         int idx = C_indices[k] + 1;
@@ -30,7 +30,7 @@ std::vector<AmideIEntry> Extract_Amide_Coordinates(const std::vector<Atom>& atom
         }
     }
 
-    // ---- Step 3: from each O, find the next N or OXT ----
+    // Step 3: from each O, find the next N or OXT 
     std::vector<int> N_indices(C_indices.size(), -1);
     for (size_t k = 0; k < C_indices.size(); k++) {
         int oi = O_indices[k];
@@ -47,7 +47,7 @@ std::vector<AmideIEntry> Extract_Amide_Coordinates(const std::vector<Atom>& atom
         }
     }
 
-    // ---- Step 4: assemble valid C/O/N triplets ----
+    // Step 4: assemble valid C/O/N triplets 
     for (size_t k = 0; k < C_indices.size(); k++) {
         if (O_indices[k] < 0 || N_indices[k] < 0) {
             continue;

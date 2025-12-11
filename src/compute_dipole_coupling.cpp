@@ -21,7 +21,7 @@ double compute_dipole_coupling(
 
     double R = std::sqrt(R2);
 
-    // cutoff (MATLAB sets Beta=0 outside cutoff)
+    // cutoff  to be developed
     if (use_cutoff && R > distance_cutoff)
         return 0.0;
 
@@ -39,7 +39,7 @@ double compute_dipole_coupling(
                  + Ri_minus_Rj.y * mu_j.y
                  + Ri_minus_Rj.z * mu_j.z;
 
-    // MATLAB:
+    
     // Beta = prefactor * (muIdotJ/R^3 - 3*(R·muI)(R·muJ)/R^5)
     double beta = prefactor * (muIdotJ / R3 - 3.0 * (RdotI * RdotJ) / R5);
 

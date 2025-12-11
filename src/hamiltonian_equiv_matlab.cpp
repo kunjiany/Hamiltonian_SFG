@@ -7,9 +7,7 @@
 #include <iostream>
 #include <lapacke.h>
 
-// ===============================================================
-// Diagonalize symmetric NxN matrix H (row-major) → eigenvalues+vectors
-// ===============================================================
+
 static bool diagonalize(std::vector<double>& H, int N, std::vector<double>& evals)
 {
     evals.resize(N);
@@ -20,12 +18,7 @@ static bool diagonalize(std::vector<double>& H, int N, std::vector<double>& eval
     return (info == 0);
 }
 
-// ===============================================================
-// MAIN FUNCTION: Hamiltonian_equiv_matlab
-//   * Build 1-exciton Hamiltonian with dipole–dipole coupling
-//   * Diagonalize
-//   * Compute μ_ex and α_ex by projecting site μ/α with eigenvectors
-// ===============================================================
+
 HamiltonianEquivResult Hamiltonian_equiv_matlab(
     const std::vector<AmideIGeo>&   geo,
     const std::vector<AmideIProps>& props,
@@ -39,9 +32,7 @@ HamiltonianEquivResult Hamiltonian_equiv_matlab(
     if (N == 0) return out;
     out.N = N;
 
-    // -----------------------------------------------------------
-    // 1. Rotate site dipoles and Raman tensors (rod/lab frame)
-    // -----------------------------------------------------------
+    
     auto rotated = rotate_properties(props, tilt_deg, twist_deg);
 
     out.mu_rot.resize(N);
@@ -56,10 +47,7 @@ HamiltonianEquivResult Hamiltonian_equiv_matlab(
             out.alpha_rot[i][k] = rotated[i].alpha_rot[k];
         }
     }
-
-    // -----------------------------------------------------------
-    // 2. Build 1-exciton Hamiltonian H (N×N)
-    // -----------------------------------------------------------
+    //build hamiltonian
     std::vector<double> H(N * N, 0.0);
 
     // Diagonal: site frequencies
@@ -67,7 +55,7 @@ HamiltonianEquivResult Hamiltonian_equiv_matlab(
         H[i * N + i] = freqs[i].freq;
     }
 
-    // Dipole–dipole coupling prefactor (from your MATLAB code)
+    // Dipole–dipole coupling prefactor (from MATLAB code)
     const double prefactor =
         5034.0 * std::pow((4.1058 / std::sqrt(1600.0)) * 3.144, 2);
 
@@ -93,19 +81,17 @@ HamiltonianEquivResult Hamiltonian_equiv_matlab(
         }
     }
 
-    // -----------------------------------------------------------
-    // 3. Diagonalize H → eigenvalues + eigenvectors
-    //    H is overwritten with eigenvectors (columns) by LAPACKE_dsyev
-    // -----------------------------------------------------------
+
+    // Diagonalize H → eigenvalues + eigenvectors
+    // H is overwritten with eigenvectors (columns) by LAPACKE_dsyev
     std::vector<double> evals;
     if (!diagonalize(H, N, evals)) {
         std::cerr << "[Hamiltonian_equiv_matlab] LAPACK dsyev failed\n";
         return out;
     }
 
-    // -----------------------------------------------------------
+
     // 4. Sort eigenvalues and eigenvectors ascending (like MATLAB sort)
-    // -----------------------------------------------------------
     std::vector<int> idx(N);
     for (int i = 0; i < N; ++i) idx[i] = i;
 
@@ -125,11 +111,10 @@ HamiltonianEquivResult Hamiltonian_equiv_matlab(
         }
     }
 
-    // -----------------------------------------------------------
-    // 5. Compute exciton μ_ex and α_ex:
-    //    μ_ex(k)   = Σ_i V(i,k) * μ_i
-    //    α_ex(k,:) = Σ_i V(i,k) * α_i(:)
-    // -----------------------------------------------------------
+
+    // Compute exciton μ_ex and α_ex:
+    // μ_ex(k)   = Σ_i V(i,k) * μ_i
+    // α_ex(k,:) = Σ_i V(i,k) * α_i(:)
     out.mu_ex.resize(N);
     out.alpha_ex.resize(N);
 
